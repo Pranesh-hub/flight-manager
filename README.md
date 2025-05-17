@@ -30,7 +30,7 @@ XN DN θN
 - `A`: Three-letter origin airport code (e.g., `DEL`)
 - `B`: Three-letter destination airport code (e.g., `NYC`)
 - `F`: Integer (0 ≤ F ≤ 5000) — initial fuel available in the plane
-- `N`: Number of other airports (1 ≤ N ≤ 10)
+- `N`: Number of other airports including destination (1 ≤ N ≤ 49)
 - Each of the next `N` lines contains:
   - `Xi`: Three-letter airport code
   - `Di`: Distance from `A` (100 ≤ Di ≤ 30000)
@@ -95,7 +95,7 @@ DEL->BLR->NYC
 
 ## Constraints
 
-- 1 ≤ N ≤ 10  
+- 1 ≤ N ≤ 49  
 - 0 ≤ F ≤ 5000  
 - 100 ≤ D ≤ 30000  
 - 0 ≤ θ < 360  
