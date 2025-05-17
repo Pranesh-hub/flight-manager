@@ -1,48 +1,51 @@
-import math
 import random
+import math
 
-# List of 15 Indian airports (IATA codes)
-indian_airports = [
-    "DEL", "BLR", "BOM", "MAA", "HYD", "CCU", "PNQ", "COK", "GOI", "IXC",
-    "LKO", "AMD", "JAI", "SXR", "TRV"
+# Airport codes list (15 Indian + others)
+all_airports = [
+    "DEL", "BLR", "MUM", "HYD", "CCU", "PNQ", "GOI", "BOM", "AMD", "COK",
+    "JAI", "LKO", "MAA", "IXR", "PAT",  # 15 Indian
+    "JFK", "LAX", "ORD", "ATL", "DFW", "DEN", "SFO", "SEA", "MIA", "BOS",
+    "CDG", "LHR", "FRA", "AMS", "MAD", "BCN", "ROM", "VIE", "ZRH", "CPH",
+    "HND", "PEK", "SIN", "SYD", "DXB", "CPT", "GRU", "YVR", "EZE", "MEX"
 ]
 
-# List of 35 foreign airports (example codes)
-foreign_airports = [
-    "JFK", "LHR", "CDG", "FRA", "HND", "SYD", "DXB", "SIN", "YYZ", "GRU",
-    "ATL", "PEK", "ORD", "MAD", "BCN", "MEX", "MUC", "AMS", "SFO", "IST",
-    "NRT", "DUB", "CPT", "KUL", "AKL", "ZRH", "BKK", "SVO", "MEL", "EWR",
-    "LGW", "FCO", "SHA", "VIE", "CPH", "MNL", "SEA"
-]
+def random_angle():
+    return round(random.uniform(0, 360), 2)
 
-# Shuffle and pick 15 Indian and 35 foreign
-random.shuffle(indian_airports)
-random.shuffle(foreign_airports)
+def random_dist():
+    return random.randint(100, 30000)
 
-airports = indian_airports[:15] + foreign_airports[:35]
+def generate():
+    # Pick origin and destination distinct
+    origin = random.choice(all_airports)
+    destination = random.choice(all_airports)
+    while destination == origin:
+        destination = random.choice(all_airports)
 
-# Origin and Destination chosen randomly from the airports
-origin = random.choice(airports)
-destination = random.choice(airports)
-while destination == origin:
-    destination = random.choice(airports)
+    # Initial fuel 0 to 5000
+    initial_fuel = random.randint(0, 5000)
 
-# Fuel between 0 and 5000
-fuel = random.randint(0, 5000)
+    # Number of airports N: 1 to 10
+    N = random.randint(1, 10)
 
-# Destination angle θF in degrees (0 to 359)
-thetaF = random.uniform(0, 360)
+    # Airports to include: destination + N-1 others unique and excluding origin
+    used = {origin, destination}
+    other_airports = [destination]
 
-# Number of other airports N (excluding origin)
-N = len(airports) - 1
+    while len(other_airports) < N:
+        a = random.choice(all_airports)
+        if a not in used:
+            used.add(a)
+            other_airports.append(a)
 
-print(f"{origin} {destination} {fuel} {thetaF:.2f}")
-print(N)
+    # Print input as per format
+    print(f"{origin} {destination} {initial_fuel}")
+    print(N)
+    for code in other_airports:
+        d = random_dist()
+        theta = random_angle()
+        print(f"{code} {d} {theta}")
 
-for code in airports:
-    if code == origin:
-        continue
-    # Random distance 100 to 30000
-    dist = random.randint(100, 30000)
-    angle = random.uniform(0, 360)
-    print(f"{code} {dist} {angle:.2f}")
+if __name__ == "__main__":
+    generate()
