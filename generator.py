@@ -28,7 +28,7 @@ while destination == origin:
     destination = random.choice(airports)
 
 # Fuel between 0 and 5000
-fuel = random.randint(1000, 5000)
+fuel = random.randint(0, 5000)
 
 # Destination angle θF in degrees (0 to 359)
 thetaF = random.uniform(0, 360)
