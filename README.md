@@ -6,7 +6,7 @@ You are the operations manager at a busy airline. With the growth of air travel,
 Given:
 - The origin and destination airports.
 - Initial fuel in the plane.
-- A list of other available airports with their positions defined relative to the origin.
+- A list of other available airports including destination airport with their positions defined relative to the origin.
 
 Design a system that **finds the route from the origin to the destination** (possibly via other airports) that consumes the **minimum total fuel**. 
 
@@ -19,7 +19,7 @@ Fuel consumption is **1 unit per 1 unit of distance** traveled.
 ## Input
 
 ```
-A B F  
+A B F θF 
 N  
 X1 D1 θ1  
 X2 D2 θ2  
@@ -30,6 +30,7 @@ XN DN θN
 - `A`: Three-letter origin airport code (e.g., `DEL`)
 - `B`: Three-letter destination airport code (e.g., `NYC`)
 - `F`: Integer (0 ≤ F ≤ 5000) — initial fuel available in the plane
+- `θF`: Angle (in degrees) with respect to the x-axis (0 ≤ θF < 360)
 - `N`: Number of other airports (1 ≤ N ≤ 10)
 - Each of the next `N` lines contains:
   - `Xi`: Three-letter airport code
