@@ -6,7 +6,7 @@ You are the operations manager at a busy airline. With the growth of air travel,
 Given:
 - The origin and destination airports.
 - Initial fuel in the plane.
-- A list of other available airports with their positions defined relative to the origin.
+- A list of other available airports including the destination airport with their positions defined relative to the origin.
 
 Design a system that **finds the route from the origin to the destination** (possibly via other airports) that consumes the **minimum total fuel**. 
 
