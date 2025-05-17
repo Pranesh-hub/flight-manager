@@ -1,51 +1,73 @@
 import random
 import math
 
-# Airport codes list (15 Indian + others)
-all_airports = [
-    "DEL", "BLR", "MUM", "HYD", "CCU", "PNQ", "GOI", "BOM", "AMD", "COK",
-    "JAI", "LKO", "MAA", "IXR", "PAT",  # 15 Indian
-    "JFK", "LAX", "ORD", "ATL", "DFW", "DEN", "SFO", "SEA", "MIA", "BOS",
-    "CDG", "LHR", "FRA", "AMS", "MAD", "BCN", "ROM", "VIE", "ZRH", "CPH",
-    "HND", "PEK", "SIN", "SYD", "DXB", "CPT", "GRU", "YVR", "EZE", "MEX"
+# Fixed airport list with (code, country)
+airports_list = [
+    # 15 Indian airports (example)
+    ("DEL", "India"), ("BOM", "India"), ("BLR", "India"), ("HYD", "India"), ("MAA", "India"),
+    ("CCU", "India"), ("GOI", "India"), ("PNQ", "India"), ("COK", "India"), ("AMD", "India"),
+    ("LKO", "India"), ("IXZ", "India"), ("JAI", "India"), ("TRV", "India"), ("PAT", "India"),
+    # 35 International airports (example)
+    ("JFK", "USA"), ("LHR", "UK"), ("CDG", "France"), ("DXB", "UAE"), ("HND", "Japan"),
+    ("FRA", "Germany"), ("SIN", "Singapore"), ("SYD", "Australia"), ("GRU", "Brazil"), ("YYZ", "Canada"),
+    ("AMS", "Netherlands"), ("MEX", "Mexico"), ("ICN", "South Korea"), ("MAD", "Spain"), ("FCO", "Italy"),
+    ("SVO", "Russia"), ("BKK", "Thailand"), ("ZRH", "Switzerland"), ("EWR", "USA"), ("MUC", "Germany"),
+    ("KUL", "Malaysia"), ("BOM", "India"), ("CPT", "South Africa"), ("DME", "Russia"), ("LAX", "USA"),
+    ("PHX", "USA"), ("IAD", "USA"), ("SFO", "USA"), ("ATL", "USA"), ("ORD", "USA"),
+    ("DEL", "India"), ("LIS", "Portugal"), ("BRU", "Belgium"), ("VIE", "Austria"), ("MAN", "UK"),
+    ("ARN", "Sweden"), ("CPH", "Denmark"), ("HEL", "Finland"), ("OSL", "Norway"), ("WAW", "Poland"),
 ]
 
-def random_angle():
-    return round(random.uniform(0, 360), 2)
+def generate_polar_coords():
+    # Distance: 100 to 30000 units
+    dist = random.randint(100, 30000)
+    # Angle in degrees 0-359
+    angle = random.randint(0, 359)
+    return dist, angle
 
-def random_dist():
-    return random.randint(100, 30000)
+def generate_test_case():
+    # Select origin and destination distinct
+    origin = random.choice(airports_list)[0]
+    dest = origin
+    while dest == origin:
+        dest = random.choice(airports_list)[0]
 
-def generate():
-    # Pick origin and destination distinct
-    origin = random.choice(all_airports)
-    destination = random.choice(all_airports)
-    while destination == origin:
-        destination = random.choice(all_airports)
+    # N between 3 and 10
+    N = random.randint(3, 10)
 
-    # Initial fuel 0 to 5000
-    initial_fuel = random.randint(0, 5000)
+    # Pick N-1 other airports (excluding origin but including destination)
+    candidates = [a[0] for a in airports_list if a[0] != origin]
+    selected = set()
+    selected.add(dest)
 
-    # Number of airports N: 1 to 10
-    N = random.randint(1, 10)
+    while len(selected) < N:
+        c = random.choice(candidates)
+        selected.add(c)
 
-    # Airports to include: destination + N-1 others unique and excluding origin
-    used = {origin, destination}
-    other_airports = [destination]
+    # initial fuel between 1000 and 4999 so refuel needed (some airports > initial fuel distance)
+    initial_fuel = random.randint(1000, 4999)
 
-    while len(other_airports) < N:
-        a = random.choice(all_airports)
-        if a not in used:
-            used.add(a)
-            other_airports.append(a)
-
-    # Print input as per format
-    print(f"{origin} {destination} {initial_fuel}")
+    print(f"{origin} {dest} {initial_fuel}")
     print(N)
-    for code in other_airports:
-        d = random_dist()
-        theta = random_angle()
-        print(f"{code} {d} {theta}")
+
+    # For each airport, generate random dist and angle
+    # Make sure destination distance > initial fuel to force refuel
+    airport_data = []
+    for code in selected:
+        if code == dest:
+            dist = random.randint(initial_fuel + 100, 30000)
+        else:
+            dist, _ = generate_polar_coords()
+        angle = random.randint(0, 359)
+        airport_data.append((code, dist, angle))
+
+    # Shuffle except destination last (optional)
+    airport_data_sorted = [a for a in airport_data if a[0] != dest]
+    random.shuffle(airport_data_sorted)
+    airport_data_sorted.append([a for a in airport_data if a[0] == dest][0])
+
+    for code, dist, angle in airport_data_sorted:
+        print(f"{code} {dist} {angle}")
 
 if __name__ == "__main__":
-    generate()
+    generate_test_case()
