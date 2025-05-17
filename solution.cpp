@@ -4,170 +4,140 @@ using namespace std;
 struct Airport {
     string code;
     double x, y;
-    int idx;
 };
 
-const int MAXN = 55;
-const int MAXFUEL = 5000;
-
-int N;
-Airport airports[MAXN];
-map<string,int> codeToIdx;
-double distMat[MAXN][MAXN];
-int F;
-int startIdx, destIdx;
-
-// Convert polar to Cartesian
-pair<double,double> polarToCartesian(double dist, double angleDeg) {
-    double rad = angleDeg * M_PI / 180.0;
-    return {dist*cos(rad), dist*sin(rad)};
+double toRadians(double deg) {
+    return deg * M_PI / 180.0;
 }
 
-// Euclidean distance
-double euclid(const Airport &a, const Airport &b) {
-    double dx = a.x - b.x;
-    double dy = a.y - b.y;
-    return sqrt(dx*dx + dy*dy);
+double dist(const Airport &a, const Airport &b) {
+    return hypot(a.x - b.x, a.y - b.y);
 }
-
-// State: current airport index, current fuel left
-// We'll do a Dijkstra over states (airport, fuel left)
-// At each airport, can refuel to full 5000
-// Edges: travel to another airport if fuel left >= needed
-// Cost: total fuel consumed (distance traveled)
-// We want to minimize total fuel consumed
-// If tie: lex smallest path (we can store path in parent and use lex order for tie-breaking)
-
-struct State {
-    int airport;
-    int fuelLeft;
-    double cost; // total fuel consumed so far
-    string path;
-    bool operator<(const State &o) const {
-        if (cost != o.cost) return cost > o.cost; // min-heap by cost
-        return path > o.path; // lex order tie-break
-    }
-};
 
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    string A, B;
-    double thetaF;
-    cin >> A >> B >> F >> thetaF;
-    cin >> N;
+    string originCode, destCode;
+    int F; // initial fuel
+    cin >> originCode >> destCode >> F;
 
-    // origin airport at (0,0)
-    airports[0] = {A, 0.0, 0.0, 0};
-    codeToIdx[A] = 0;
+    int N; cin >> N;
 
-    // Destination coordinates from origin using F and thetaF
-    auto [dx, dy] = polarToCartesian(0, 0); // we'll overwrite below
-    airports[N+1] = {B, 0, 0, N+1};
-    codeToIdx[B] = N+1;
+    vector<Airport> airports;
+    airports.push_back({originCode, 0.0, 0.0}); // origin at (0,0)
 
-    // Read other airports (Xi Di θi)
-    for (int i = 1; i <= N; i++) {
-        string code; double dist, angle;
-        cin >> code >> dist >> angle;
-        auto [x, y] = polarToCartesian(dist, angle);
-        airports[i] = {code, x, y, i};
-        codeToIdx[code] = i;
+    // Read other airports including destination
+    for (int i = 0; i < N; i++) {
+        string code; double D, theta;
+        cin >> code >> D >> theta;
+        double x = D * cos(toRadians(theta));
+        double y = D * sin(toRadians(theta));
+        airports.push_back({code, x, y});
     }
 
-    // Destination airport's coordinates
-    // The input format states destination is included with others, so we expect it in the N lines?
-    // But your format has destination's distance + angle as thetaF (separate)
-    // So let's overwrite the dest airport location using given thetaF and F as distance? 
-    // Actually no, destination distance must be known from input N lines
-    // So we assume the destination airport is part of the N airports list with code B.
-    // To fix: destination airport should be included in N lines. 
-    // We'll just find destIdx after input
-
-    startIdx = 0;
-    if (codeToIdx.find(B) == codeToIdx.end()) {
+    // Find index of destination in airports
+    int destIndex = -1;
+    for (int i = 0; i < (int)airports.size(); i++) {
+        if (airports[i].code == destCode) {
+            destIndex = i;
+            break;
+        }
+    }
+    if (destIndex == -1) {
         cout << "NO PATH\n";
         return 0;
     }
-    destIdx = codeToIdx[B];
 
-    // Build distance matrix
-    int totalAirports = N+1; // origin + N airports (including destination)
-    for (int i = 0; i < totalAirports; i++) {
-        for (int j = 0; j < totalAirports; j++) {
-            distMat[i][j] = euclid(airports[i], airports[j]);
+    int n = airports.size();
+
+    // Build graph with distances
+    vector<vector<double>> graph(n, vector<double>(n, -1));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (i != j) {
+                graph[i][j] = dist(airports[i], airports[j]);
+            }
         }
     }
 
-    // Dijkstra on state (airport, fuel left)
-    // We'll keep dist[airport][fuel] = minimal fuel consumed so far
-    // But fuel is from 0 to 5000, too large for exact
-    // Optimization: only track fuelLeft in steps of 1 might be large
-    // Instead, track dist[airport] = minimal fuel consumed to reach airport with any fuel left.
-    // But fuelLeft affects possibility to go further.
+    // State: (totalFuelUsed, currentAirport, fuelLeft)
+    using State = tuple<int, int, int>;
+    // dist[u][fuelLeft] = minimal total fuel used to reach u with fuelLeft fuel
+    vector<vector<int>> dist(n, vector<int>(5001, INT_MAX));
+    vector<vector<int>> parent(n, vector<int>(5001, -1));
+    vector<vector<int>> fuelParent(n, vector<int>(5001, -1));
 
-    // So we do a priority queue storing State:
-    // State: airport, fuelLeft, cost, path string
-    // Whenever we reach an airport, we can refuel to 5000 if needed.
+    priority_queue<State, vector<State>, greater<State>> pq;
 
-    vector<vector<double>> dist(totalAirports, vector<double>(MAXFUEL+1, 1e18));
-    vector<vector<string>> paths(totalAirports, vector<string>(MAXFUEL+1, ""));
-    priority_queue<State> pq;
-
-    dist[startIdx][F] = 0.0;
-    paths[startIdx][F] = A;
-    pq.push({startIdx, F, 0.0, A});
+    dist[0][F] = 0;
+    pq.push({0, 0, F});
 
     while (!pq.empty()) {
-        State cur = pq.top(); pq.pop();
-        int u = cur.airport;
-        int fuelLeft = cur.fuelLeft;
-        double cost = cur.cost;
-        string path = cur.path;
+        auto [totalUsed, u, fuelLeft] = pq.top();
+        pq.pop();
+        if (dist[u][fuelLeft] < totalUsed) continue;
+        if (u == destIndex) break;
 
-        if (u == destIdx) {
-            cout << path << "\n";
-            return 0;
-        }
-
-        if (dist[u][fuelLeft] < cost) continue;
-
-        // Option 1: Refuel here if not already full
-        if (fuelLeft < MAXFUEL) {
-            int newFuel = MAXFUEL;
-            if (dist[u][newFuel] > cost) {
-                dist[u][newFuel] = cost;
-                paths[u][newFuel] = path;
-                pq.push({u, newFuel, cost, path});
-            } else if (abs(dist[u][newFuel] - cost) < 1e-9 && paths[u][newFuel] > path) {
-                // lex smaller path tie-break
-                paths[u][newFuel] = path;
-                pq.push({u, newFuel, cost, path});
+        // Refuel at u (if not already full)
+        if (fuelLeft < 5000) {
+            if (dist[u][5000] > totalUsed) {
+                dist[u][5000] = totalUsed;
+                parent[u][5000] = parent[u][fuelLeft];
+                fuelParent[u][5000] = fuelLeft;
+                pq.push({totalUsed, u, 5000});
             }
         }
 
-        // Option 2: Fly to other airports if fuel permits
-        for (int v = 0; v < totalAirports; v++) {
+        // Try moving to next airports
+        for (int v = 0; v < n; v++) {
             if (v == u) continue;
-            double d = distMat[u][v];
-            if (d <= fuelLeft) {
-                double newCost = cost + d;
-                int newFuelLeft = fuelLeft - (int)ceil(d);
-                string newPath = path + "->" + airports[v].code;
-
-                if (dist[v][newFuelLeft] > newCost) {
-                    dist[v][newFuelLeft] = newCost;
-                    paths[v][newFuelLeft] = newPath;
-                    pq.push({v, newFuelLeft, newCost, newPath});
-                } else if (abs(dist[v][newFuelLeft] - newCost) < 1e-9 && paths[v][newFuelLeft] > newPath) {
-                    paths[v][newFuelLeft] = newPath;
-                    pq.push({v, newFuelLeft, newCost, newPath});
+            int needed = (int)round(graph[u][v]);
+            if (needed <= fuelLeft) {
+                int newTotal = totalUsed + needed;
+                int newFuelLeft = fuelLeft - needed;
+                if (dist[v][newFuelLeft] > newTotal) {
+                    dist[v][newFuelLeft] = newTotal;
+                    parent[v][newFuelLeft] = u;
+                    fuelParent[v][newFuelLeft] = fuelLeft;
+                    pq.push({newTotal, v, newFuelLeft});
                 }
             }
         }
     }
 
-    cout << "NO PATH\n";
+    // Find minimal dist at destIndex
+    int bestFuelUsed = INT_MAX;
+    int bestFuelLeft = -1;
+    for (int f = 0; f <= 5000; f++) {
+        if (dist[destIndex][f] < bestFuelUsed) {
+            bestFuelUsed = dist[destIndex][f];
+            bestFuelLeft = f;
+        }
+    }
+
+    if (bestFuelUsed == INT_MAX) {
+        cout << "NO PATH\n";
+        return 0;
+    }
+
+    // Reconstruct path
+    vector<int> path;
+    int curNode = destIndex, curFuel = bestFuelLeft;
+    while (curNode != -1) {
+        path.push_back(curNode);
+        int p = parent[curNode][curFuel];
+        int pf = fuelParent[curNode][curFuel];
+        curNode = p;
+        curFuel = pf;
+    }
+    reverse(path.begin(), path.end());
+
+    for (size_t i = 0; i < path.size(); i++) {
+        cout << airports[path[i]].code;
+        if (i + 1 < path.size()) cout << "->";
+    }
+    cout << "\n";
+
     return 0;
 }
