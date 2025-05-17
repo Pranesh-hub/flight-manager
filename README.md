@@ -19,7 +19,7 @@ Fuel consumption is **1 unit per 1 unit of distance** traveled.
 ## Input
 
 ```
-A B F θD 
+A B F 
 N  
 X1 D1 θ1  
 X2 D2 θ2  
@@ -30,7 +30,6 @@ XN DN θN
 - `A`: Three-letter origin airport code (e.g., `DEL`)
 - `B`: Three-letter destination airport code (e.g., `NYC`)
 - `F`: Integer (0 ≤ F ≤ 5000) — initial fuel available in the plane
-- `θD`: Angle (in degrees) with respect to the x-axis (0 ≤ θF < 360) (for destination airport)
 - `N`: Number of other airports (1 ≤ N ≤ 10)
 - Each of the next `N` lines contains:
   - `Xi`: Three-letter airport code
