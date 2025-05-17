@@ -33,7 +33,7 @@ XN DN θN
 - `N`: Number of other airports (1 ≤ N ≤ 10)
 - Each of the next `N` lines contains:
   - `Xi`: Three-letter airport code
-  - `Di`: Distance from `A` (0 ≤ Di ≤ 30000)
+  - `Di`: Distance from `A` (100 ≤ Di ≤ 30000)
   - `θi`: Angle (in degrees) with respect to the x-axis (0 ≤ θi < 360)
 
 ---
@@ -97,5 +97,5 @@ DEL->BLR->NYC
 
 - 1 ≤ N ≤ 10  
 - 0 ≤ F ≤ 5000  
-- 0 ≤ D ≤ 30000  
+- 100 ≤ D ≤ 30000  
 - 0 ≤ θ < 360  
