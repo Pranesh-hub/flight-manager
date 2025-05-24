@@ -98,4 +98,9 @@ DEL->BLR->NYC
 - 1 ≤ N ≤ 49  
 - 0 ≤ F ≤ 5000  
 - 100 ≤ D ≤ 30000  
-- 0 ≤ θ < 360  
+- 0 ≤ θ < 360
+
+---
+
+- https://polygon.codeforces.com/p5uQOgM/pranesh01/flight-manager
+
